@@ -1,12 +1,13 @@
 var express = require('express')
 var bp = require('body-parser')
-var server = express()
+var app = express()
 var cors = require('cors')
-var OAuthClient = require('intuit-oauth')
 var port = process.env.PORT || 3000
 var whitelist = ['http://localhost:8080', 'http://localhost:8081']
 let axios = require('axios')
 var urlencodedParser = bp.urlencoded({ extended: false })
+var OAuthClient = require('intuit-oauth')
+var oauthClient = require('./oAuthClient')
 
 var corsOptions = {
     origin: function (origin, callback) {
@@ -17,36 +18,31 @@ var corsOptions = {
     credentials: true
 };
 
-server.use(cors(corsOptions))
+app.use(cors(corsOptions))
 
 var oauth2_token_json;
 
-var oauthClient = new OAuthClient({
-    clientId: 'Q0FKrAYW5ORFZIoN4uF97sNxCu8RT5Abwy1Jl6LGEUaLy5Wtl7',
-    clientSecret: 'Kc3W9napNn574dWB7sdc4gH7kIJRW9BN9idicLVK',
-    environment: 'sandbox',
-    redirectUri: 'http://localhost:3000/callback'
-});
+
 
 
 //Fire up database connection
 // require('./db/mlab-config')
 
 //REGISTER MIDDLEWARE
-server.use(bp.json())
-server.use(bp.urlencoded({
+app.use(bp.json())
+app.use(bp.urlencoded({
     extended: true
 }))
 
 //serve static files(prolly not needed)
-// server.use(express.static(__dirname + '/../www/'))
+// app.use(express.static(__dirname + '/../www/'))
 
-server.get('/start', urlencodedParser, (req, res) => {
+app.get('/start', urlencodedParser, (req, res) => {
     var authUri = oauthClient.authorizeUri({ scope: [OAuthClient.scopes.Accounting], state: 'intuit-test' });
     res.send(authUri);
 })
 
-server.get('/callback', function (req, res) {
+app.get('/callback', function (req, res) {
 
     oauthClient.createToken(req.url)
         .then(function (authResponse) {
@@ -60,8 +56,8 @@ server.get('/callback', function (req, res) {
 
 });
 
-server.get('/getCompanyInfo', function (req, res) {
-    var companyID = '123146192033624';
+app.get('/getCompanyInfo', function (req, res) {
+    var companyID = oauthClient.token.realmId;
 
     var url = oauthClient.environment == 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com';
 
@@ -77,17 +73,17 @@ server.get('/getCompanyInfo', function (req, res) {
 });
 
 //REGISTER YOUR AUTH ROUTES BEFORE YOUR GATEKEEPER
-//firebase authentication will be moved to the server here
+//firebase authentication will be moved to the app here
 // let auth = require('./auth/routes')
-// server.use(auth.session)
-// server.use(auth.router)
+// app.use(auth.session)
+// app.use(auth.router)
 
 //API ROUTES REQUIRING AUTH HERE
 var items = require('./server-assets/routes/items')
 
 //GATEKEEPER
 // Deny any request that is not a get or does not have a session, if it has a session add the creatorId
-// server.use('/api/*', (req, res, next) => {
+// app.use('/api/*', (req, res, next) => {
 //     // @ts-ignore
 //     if (!req.session.uid && req.method != "GET") {
 //         return res.status(401).send({
@@ -103,21 +99,21 @@ var items = require('./server-assets/routes/items')
 
 //Actual routes here
 //@ts-ignore
-server.use('/api/items', items)
+app.use('/api/items', items)
 
 //Catch all
-server.get('*', (req, res, next) => {
+app.get('*', (req, res, next) => {
     res.status(404).send({
         error: 'No matching routes'
     })
 })
 
-server.get('*', (error, req, res, next) => {
+app.get('*', (error, req, res, next) => {
     res.status(400).send({
         error: error && error.message ? error.message : 'bad request'
     })
 })
 
-server.listen(port, () => {
-    console.log('server running on port', port)
+app.listen(port, () => {
+    console.log('app running on port', port)
 })
