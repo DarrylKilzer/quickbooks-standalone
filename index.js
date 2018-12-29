@@ -8,6 +8,9 @@ let axios = require('axios')
 var urlencodedParser = bp.urlencoded({ extended: false })
 var OAuthClient = require('intuit-oauth')
 var oauthClient = require('./oAuthClient')
+var QuickBooks = require('./Quickbooks')
+
+
 
 var corsOptions = {
     origin: function (origin, callback) {
@@ -47,12 +50,22 @@ app.get('/callback', function (req, res) {
     oauthClient.createToken(req.url)
         .then(function (authResponse) {
             oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
+            QuickBooks.qbo = new QuickBooks.Quickbooks(
+                oauthClient.clientId,
+                oauthClient.clientSecret,
+                oauthClient.token.access_token,
+                false,
+                oauthClient.token.realmId,
+                true,
+                true,
+                4,
+                '2.0',
+                oauthClient.token.refresh_token)
+            res.redirect('/api/items');
         })
         .catch(function (e) {
             console.error(e);
         });
-
-    res.send('');
 
 });
 
