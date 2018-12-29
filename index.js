@@ -36,17 +36,16 @@ app.use(bp.json())
 app.use(bp.urlencoded({
     extended: true
 }))
-
 //serve static files(prolly not needed)
 // app.use(express.static(__dirname + '/../www/'))
 
 app.get('/start', urlencodedParser, (req, res) => {
     var authUri = oauthClient.authorizeUri({ scope: [OAuthClient.scopes.Accounting], state: 'intuit-test' });
-    res.send(authUri);
+    res.redirect(authUri);
 })
 
-app.get('/callback', function (req, res) {
 
+app.get('/callback', function (req, res) {
     oauthClient.createToken(req.url)
         .then(function (authResponse) {
             oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
@@ -69,6 +68,12 @@ app.get('/callback', function (req, res) {
 
 });
 
+app.get('*', (req, res, next) => {
+    if (!QuickBooks.qbo.createItem) {
+        res.redirect('/start')
+    }
+    else { next() }
+})
 app.get('/getCompanyInfo', function (req, res) {
     var companyID = oauthClient.token.realmId;
 

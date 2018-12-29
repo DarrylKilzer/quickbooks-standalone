@@ -22,5 +22,10 @@ router.get('/:id', (req, res, next) => {
         res.send(item)
     })
 })
+router.post('/', (req, res, next) => {
+    QuickBooks.qbo.createItem(req.body, (e, item) => {
+        res.send(item)
+    })
+})
 
 module.exports = router
