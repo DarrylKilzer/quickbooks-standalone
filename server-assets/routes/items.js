@@ -1,30 +1,40 @@
 let router = require('express').Router()
 let oauthClient = require('../../oAuthClient')
-let OauthClient = require('intuit-oauth')
-var url = oauthClient.environment == 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com';
-let axios = require('axios')
-let QuickBooks = require('../../Quickbooks')
+let quickBooks = require('../../Quickbooks')
 
-let intuit = axios.create({
-    baseURL: url,
-    timeout: 1000,
-    withCredentials: true
-})
 //all items
 router.get('/', (req, res, next) => {
-    QuickBooks.qbo.findItems({ fetchAll: true }, function (e, items) {
+    quickBooks.qbo.findItems({ fetchAll: true }, (err, items) => {
         res.send(items)
     })
 })
+
 //get one item by id
 router.get('/:id', (req, res, next) => {
-    QuickBooks.qbo.getItem(req.params.id, function (e, item) {
+    quickBooks.qbo.getItem(req.params.id, (err, item) => {
         res.send(item)
     })
 })
+
+//make an item
 router.post('/', (req, res, next) => {
-    QuickBooks.qbo.createItem(req.body, (e, item) => {
-        res.send(item)
+    quickBooks.qbo.createItem(req.body, (err, item) => {
+        if (item) {
+            res.send(item)
+        } else {
+            res.status(400).send(err)
+        }
+    })
+})
+
+//update an item
+router.put('/:id', (req, res, next) => {
+    quickBooks.qbo.updateItem(req.body, (err, item) => {
+        if (item) {
+            res.send(item)
+        } else {
+            res.status(400).send(err)
+        }
     })
 })
 

@@ -8,9 +8,7 @@ let axios = require('axios')
 var urlencodedParser = bp.urlencoded({ extended: false })
 var OAuthClient = require('intuit-oauth')
 var oauthClient = require('./oAuthClient')
-var QuickBooks = require('./Quickbooks')
-
-
+var quickBooks = require('./Quickbooks')
 
 var corsOptions = {
     origin: function (origin, callback) {
@@ -49,7 +47,7 @@ app.get('/callback', function (req, res) {
     oauthClient.createToken(req.url)
         .then(function (authResponse) {
             oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
-            QuickBooks.qbo = new QuickBooks.Quickbooks(
+            quickBooks.qbo = new quickBooks.Quickbooks(
                 oauthClient.clientId,
                 oauthClient.clientSecret,
                 oauthClient.token.access_token,
@@ -68,12 +66,6 @@ app.get('/callback', function (req, res) {
 
 });
 
-app.get('*', (req, res, next) => {
-    if (!QuickBooks.qbo.createItem) {
-        res.redirect('/start')
-    }
-    else { next() }
-})
 app.get('/getCompanyInfo', function (req, res) {
     var companyID = oauthClient.token.realmId;
 
@@ -97,35 +89,24 @@ app.get('/getCompanyInfo', function (req, res) {
 // app.use(auth.router)
 
 //API ROUTES REQUIRING AUTH HERE
-var items = require('./server-assets/routes/items')
+var itemRoutes = require('./server-assets/routes/items')
+var invoiceRoutes = require('./server-assets/routes/invoices')
 
 //GATEKEEPER
 // Deny any request that is not a get or does not have a session, if it has a session add the creatorId
-// app.use('/api/*', (req, res, next) => {
-//     // @ts-ignore
-//     if (!req.session.uid && req.method != "GET") {
-//         return res.status(401).send({
-//             error: 'please login to continue'
-//         })
-//     }
-//     else {
-//         // @ts-ignore
-//         req.creatorId = req.session.uid
-//     }
-//     next()
-// })
+app.use('/api/*', (req, res, next) => {
+    if (!quickBooks.qbo.createItem) {
+        res.redirect('/start')
+    }
+    else { next() }
+})
 
 //Actual routes here
 //@ts-ignore
-app.use('/api/items', items)
+app.use('/api/items', itemRoutes)
+app.use('/api/invoices', invoiceRoutes)
 
 //Catch all
-app.get('*', (req, res, next) => {
-    res.status(404).send({
-        error: 'No matching routes'
-    })
-})
-
 app.get('*', (error, req, res, next) => {
     res.status(400).send({
         error: error && error.message ? error.message : 'bad request'
