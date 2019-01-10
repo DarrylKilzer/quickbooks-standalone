@@ -52,7 +52,7 @@ app.get('/callback', function (req, res) {
                 oauthClient.token.access_token,
                 false,
                 oauthClient.token.realmId,
-                true,
+                false,
                 true,
                 4,
                 '2.0',
