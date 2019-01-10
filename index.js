@@ -37,7 +37,7 @@ app.use(bp.urlencoded({
 // app.use(express.static(__dirname + '/../www/'))
 
 app.get('/start', urlencodedParser, (req, res) => {
-    var authUri = oauthClient.authorizeUri({ scope: [OAuthClient.scopes.Accounting], state: 'intuit-test' });
+    var authUri = oauthClient.authorizeUri({ scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.Payment], state: 'intuit-test' });
     res.redirect(authUri);
 })
 
