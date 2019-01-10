@@ -1,4 +1,4 @@
-var Quickbooks = require('node-quickbooks')
+var Quickbooks = require('./node-quickbooks')
 Quickbooks.setOauthVersion('2.0', true)
 
 let qbo = {};
