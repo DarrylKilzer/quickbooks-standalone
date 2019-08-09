@@ -91,6 +91,7 @@ app.get('/getCompanyInfo', function (req, res) {
 var itemRoutes = require('./server-assets/routes/items')
 var invoiceRoutes = require('./server-assets/routes/invoices')
 var emailRoutes = require('./server-assets/routes/emails')
+var customerRoutes = require('./server-assets/routes/customers')
 
 //GATEKEEPER
 // Deny any request that is not a get or does not have a session, if it has a session add the creatorId
@@ -107,6 +108,7 @@ console.log("Message from the server in the browser!!! COOL")
 app.use('/api/items', itemRoutes)
 app.use('/api/invoices', invoiceRoutes)
 app.use('/api/emails', emailRoutes)
+app.use('/api/customers', customerRoutes)
 
 //Catch all
 app.get('*', (error, req, res, next) => {
